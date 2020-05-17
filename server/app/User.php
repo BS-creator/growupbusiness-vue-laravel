@@ -36,4 +36,16 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function giftlogos() {
+        return $this->hasMany('App\Giftlogo');
+    }
+
+    public function giftBgImgs() {
+        return $this->hasMany('App\Giftbgimg');
+    }
+
+    public function giftCards() {
+        return $this->hasMany('App\Giftcard');
+    }
 }

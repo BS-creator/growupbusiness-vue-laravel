@@ -16,12 +16,18 @@ Route::post('signup', 'Auth\AuthController@signup');
 Route::post('logout', 'Auth\AuthController@logout');
 
 
-Route::apiResource('user', 'UserController');
-
 Route::group(['middleware' => ['auth:api']], function () {
-    Route::get('test', function () {
-        echo 'hello! terrific';
-    });
+    Route::apiResources([
+        'user' => 'UserController',
+        'giftLogo' => 'GiftLogoController',
+        'giftBgImg' => 'GiftBgImgController',
+        'giftCard' => 'GiftCardController',
+    ]);
+
+    Route::get('user_info', 'UserController@getUser');
 });
 
-Route::get('user_info', 'UserController@getUser');
+
+Route::post('photo', function (Request $request) {
+    return array("input" => $request->input(), "file" => $request->file());
+});

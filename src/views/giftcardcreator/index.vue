@@ -1,27 +1,53 @@
 <template>
-  <div class="app-container giftcreator-wrapper">
+  <div class="app-container creator-wrapper">
     <el-container>
       <el-header>
-        <router-link to="/gift">
-          <el-button :loading="loading" type="primary" class="login-btn" size="large">
-            <div>
-              <i class="fa fa-sign-plus"></i>
-              <span>GO BACK</span>
-            </div>
-          </el-button>
-        </router-link>
-        <el-button
-          :loading="loading"
-          type="primary"
-          class="login-btn"
-          size="large"
-          style="float: right"
-        >
+        <div style="display: flex;justify-content: space-between;">
           <div>
-            <i class="fa fa-sign-plus"></i>
-            <span>SAVE CARD</span>
+            <router-link to="/gift-card">
+              <el-button
+                :loading="loading"
+                type="primary"
+                class="login-btn"
+                size="large"
+                icon="el-icon-arrow-left"
+              >GO BACK</el-button>
+            </router-link>
           </div>
-        </el-button>
+          <!-- MAIN CARD SETTING BEGIN -->
+          <!-- <div>
+            <div>
+              <span class="demonstration">W:</span>
+              <el-input-number size="mini" v-model="backgroundColor.width" style="width:100px"></el-input-number>
+              <span class="demonstration" style="margin-left:18px;">H:</span>
+              <el-input-number size="mini" v-model="backgroundColor.height" style="width:100px"></el-input-number>
+            </div>
+          </div>-->
+          <!-- MAIN CARD SETTING BEGIN -->
+          <div>
+            <el-button
+              :loading="loading"
+              type="primary"
+              class="login-btn"
+              size="large"
+              style="float: right;"
+              @click="downloadGiftCard()"
+              icon="el-icon-download"
+            >DOWNLOAD</el-button>
+            <el-button
+              :loading="loading"
+              type="primary"
+              class="login-btn"
+              size="large"
+              style="float: right; margin-right: 20px;"
+              @click="saveGiftCard()"
+              icon="el-icon-check"
+            >
+              <span v-if="isEditor">UPDATE CARD</span>
+              <span v-else>SAVE CARD</span>
+            </el-button>
+          </div>
+        </div>
       </el-header>
     </el-container>
     <div class="giftcard-creator">
@@ -30,9 +56,9 @@
         <!-- SETTING BAR BEGIN -->
         <el-aside>
           <!-- SETTING BAR TAB BEGIN -->
-          <el-tabs :tab-position="tabPosition">
+          <el-tabs :tab-position="tabPosition" v-model="tabActive">
             <!-- LOGO TAB BEGIN -->
-            <el-tab-pane>
+            <el-tab-pane name="logoimgtab">
               <div class="tab-label" slot="label">
                 <el-tooltip effect="light" placement="right">
                   <div slot="content">Logo</div>
@@ -46,15 +72,15 @@
                   <template>
                     <div class="block">
                       <span class="demonstration">Top:</span>
-                      <el-slider :max="backgroundColor.height" v-model="logo.top"></el-slider>
+                      <el-slider :min="-100" :max="100" v-model="logo.top" :step="0.1"></el-slider>
                     </div>
                     <div class="block">
                       <span class="demonstration">Left:</span>
-                      <el-slider :max="backgroundColor.width" v-model="logo.left"></el-slider>
+                      <el-slider :max="100" v-model="logo.left" :step="0.1"></el-slider>
                     </div>
                     <div class="block">
                       <span class="demonstration">Size:</span>
-                      <el-slider :max="100" v-model="logo.width"></el-slider>
+                      <el-slider :max="100" v-model="logo.width" :step="0.1"></el-slider>
                     </div>
                     <!-- <div class="block">
                       <span class="demonstration">Height:</span>
@@ -71,9 +97,15 @@
                   </div>
                 </div>
                 <el-scrollbar wrap-class="scrollbar-wrapper">
-                  <div id="test">
-                    <el-upload action="#" list-type="picture-card" :auto-upload="false">
-                      <i slot="default" class="el-icon-plus"></i>
+                  <div id="test" style="height: 555px;">
+                    <el-upload
+                      action="#"
+                      list-type="picture-card"
+                      :on-change="handleLogoChange"
+                      :file-list="giftLogos"
+                      :auto-upload="false"
+                    >
+                      <i class="el-icon-plus"></i>
                       <div slot="file" slot-scope="{file}" style="height:100%">
                         <img
                           class="el-upload-list__item-thumbnail"
@@ -82,21 +114,12 @@
                           alt
                         />
                         <span class="el-upload-list__item-actions" @click="applyLogo(file)">
-                          <span
-                            class="el-upload-list__item-preview"
-                            @click="handleLogoPreview(file)"
-                          >
-                            <i class="el-icon-zoom-in"></i>
-                          </span>
                           <span class="el-upload-list__item-delete" @click="handleLogoRemove(file)">
                             <i class="el-icon-delete"></i>
                           </span>
                         </span>
                       </div>
                     </el-upload>
-                    <el-dialog :visible.sync="logoDialogVisible">
-                      <img width="100%" :src="logoDialogImageUrl" alt />
-                    </el-dialog>
                   </div>
                 </el-scrollbar>
               </div>
@@ -105,7 +128,7 @@
             <!-- LOGO TAB END -->
 
             <!-- BACKGROUND IMAGE TAB BEGIN -->
-            <el-tab-pane>
+            <el-tab-pane name="bgimgtab">
               <div class="tab-label" slot="label">
                 <el-tooltip effect="light" placement="right">
                   <div slot="content">BackGround Image</div>
@@ -124,12 +147,13 @@
                   ></el-switch>
                 </div>
                 <el-scrollbar wrap-class="scrollbar-wrapper">
-                  <div>
+                  <div style="height: 700px;">
                     <el-upload
                       action="#"
                       list-type="picture-card"
+                      :on-change="handleBgImgChange"
+                      :file-list="giftBgImgs"
                       :auto-upload="false"
-                      ref="bgGallery"
                     >
                       <i slot="default" class="el-icon-plus"></i>
                       <div slot="file" slot-scope="{file}" style="height:100%">
@@ -140,21 +164,12 @@
                           alt
                         />
                         <span class="el-upload-list__item-actions" @click="applyBgImage(file)">
-                          <span
-                            class="el-upload-list__item-preview"
-                            @click="handleBgCardPreview(file)"
-                          >
-                            <i class="el-icon-zoom-in"></i>
-                          </span>
                           <span class="el-upload-list__item-delete" @click="handleBgRemove(file)">
                             <i class="el-icon-delete"></i>
                           </span>
                         </span>
                       </div>
                     </el-upload>
-                    <el-dialog :visible.sync="BgDialogVisible">
-                      <img width="100%" :src="BgDialogImageUrl" alt />
-                    </el-dialog>
                   </div>
                 </el-scrollbar>
               </div>
@@ -163,16 +178,16 @@
             <!-- BACKGROUND IMAGE TAB END -->
 
             <!-- BACKGROUND COLOR TAB BEGIN -->
-            <el-tab-pane>
+            <el-tab-pane name="bgcolortab">
               <div class="tab-label" slot="label">
                 <el-tooltip effect="light" placement="right">
-                  <div slot="content">BackGround Color</div>
+                  <div slot="content">BackGround</div>
                   <svg-icon icon-class="tab" />
                 </el-tooltip>
               </div>
               <!-- BACKGROUND COLOR SETTING BEGIN -->
               <div>
-                <div class="tab-content-header">BackGround Color</div>
+                <div class="tab-content-header">BackGround</div>
                 <div class="tab-setting-section">
                   <div class="BgColorSetting">
                     <el-switch
@@ -184,29 +199,37 @@
                     <el-color-picker
                       v-model="backgroundColor.BgColor"
                       show-alpha
-                      :predefine="backgroundColor.predefineColors"
+                      :predefine="predefineColors"
                       @change="onColorPickerChange()"
                     ></el-color-picker>
                   </div>
                   <div>
-                    <el-input-number size="mini" v-model="backgroundColor.width"></el-input-number>
-                    <el-input-number size="mini" v-model="backgroundColor.height"></el-input-number>
+                    <span class="demonstration">W:</span>
+                    <el-input-number
+                      size="mini"
+                      v-model="backgroundColor.width"
+                      style="width:100px"
+                    ></el-input-number>
+                    <span class="demonstration" style="margin-left:18px;">H:</span>
+                    <el-input-number
+                      size="mini"
+                      v-model="backgroundColor.height"
+                      style="width:100px"
+                    ></el-input-number>
                   </div>
                 </div>
                 <div>
-                  <div class="predefineColors">
-                    <div
-                      v-for="color in backgroundColor.predefineColors"
-                      :key="color"
-                      class="predefineColor"
-                    >
-                      <div
-                        class="item"
-                        @click="applyBgColor(color)"
-                        v-bind:style="{backgroundColor: color}"
-                      ></div>
+                  <el-scrollbar wrap-class="scrollbar-wrapper">
+                    <div class="predefineColors" style="height: 540px;">
+                      <div v-for="color in predefineColors" :key="color" class="predefineColor">
+                        <div
+                          class="item"
+                          @click="applyBgColor(color)"
+                          v-bind:style="{backgroundColor: color}"
+                        ></div>
+                      </div>
                     </div>
-                  </div>
+                  </el-scrollbar>
                 </div>
               </div>
               <!-- BACKGROUND COLOR SETTING END -->
@@ -214,7 +237,7 @@
             <!-- BACKGROUND COLOR TAB END -->
 
             <!-- TEXT TAB BEGIN -->
-            <el-tab-pane>
+            <el-tab-pane name="texttab">
               <div class="tab-label" slot="label">
                 <el-tooltip effect="light" placement="right">
                   <div slot="content">Text</div>
@@ -232,7 +255,7 @@
                       v-bind:style="{fontFamily: text.fontFamily, width: 60+'%'}"
                     >
                       <el-option
-                        v-for="item in text.fontFamilies"
+                        v-for="item in fontFamilies"
                         :key="item.value"
                         :label="item.label"
                         :value="item.value"
@@ -240,30 +263,25 @@
                       ></el-option>
                     </el-select>
                     <el-select v-model="text.fontSize" placeholder="Select" style="width: 36%">
-                      <el-option
-                        v-for="size in text.fontSizes"
-                        :key="size"
-                        :label="size"
-                        :value="size"
-                      ></el-option>
+                      <el-option v-for="size in fontSizes" :key="size" :label="size" :value="size"></el-option>
                     </el-select>
                   </div>
                   <div>
                     <div class="block">
                       <span class="demonstration">Top:</span>
-                      <el-slider :max="backgroundColor.height" v-model="text.top"></el-slider>
+                      <el-slider :min="-100" :max="100" v-model="text.top" :step="0.1"></el-slider>
                     </div>
                     <div class="block">
                       <span class="demonstration">Left:</span>
-                      <el-slider :max="backgroundColor.width" v-model="text.left"></el-slider>
+                      <el-slider :max="100" v-model="text.left" :step="0.1"></el-slider>
                     </div>
                     <div class="block">
                       <span class="demonstration">Line Height:</span>
-                      <el-slider :max="10" v-model="text.lineHeight" style="width: 115px;"></el-slider>
+                      <el-slider :max="10" v-model="text.lineHeight" style="width: 150px;"></el-slider>
                     </div>
                     <div class="block">
                       <span class="demonstration">Letter Spacing:</span>
-                      <el-slider :max="20" v-model="text.letterSpacing" style="width: 115px;"></el-slider>
+                      <el-slider :max="50" v-model="text.letterSpacing" style="width: 150px;"></el-slider>
                     </div>
                   </div>
                   <div class="font-btns">
@@ -291,7 +309,7 @@
                     <el-color-picker
                       v-model="text.color"
                       show-alpha
-                      :predefine="backgroundColor.predefineColors"
+                      :predefine="predefineColors"
                       @change="onColorPickerChange()"
                     ></el-color-picker>
                   </div>
@@ -305,11 +323,11 @@
             <!-- TEXT TAB BEGIN -->
 
             <!-- PRICE TAB END -->
-            <el-tab-pane>
+            <el-tab-pane name="pricetab">
               <div class="tab-label" slot="label">
                 <el-tooltip effect="light" placement="right">
                   <div slot="content">Price</div>
-                  <i class="el-icon-s-marketing"></i>
+                  <svg-icon icon-class="money" />
                 </el-tooltip>
               </div>
               <!-- PRICE SETTING BEGIN -->
@@ -323,7 +341,7 @@
                       v-bind:style="{fontFamily: price.fontFamily, width: 60+'%'}"
                     >
                       <el-option
-                        v-for="item in price.fontFamilies"
+                        v-for="item in fontFamilies"
                         :key="item.value"
                         :label="item.label"
                         :value="item.value"
@@ -331,22 +349,17 @@
                       ></el-option>
                     </el-select>
                     <el-select v-model="price.fontSize" placeholder="Select" style="width: 36%">
-                      <el-option
-                        v-for="size in price.fontSizes"
-                        :key="size"
-                        :label="size"
-                        :value="size"
-                      ></el-option>
+                      <el-option v-for="size in fontSizes" :key="size" :label="size" :value="size"></el-option>
                     </el-select>
                   </div>
                   <div>
                     <div class="block">
                       <span class="demonstration">Top:</span>
-                      <el-slider :max="backgroundColor.height" v-model="price.top"></el-slider>
+                      <el-slider :min="-100" :max="100" v-model="price.top" :step="0.1"></el-slider>
                     </div>
                     <div class="block">
                       <span class="demonstration">Left:</span>
-                      <el-slider :max="backgroundColor.width" v-model="price.left"></el-slider>
+                      <el-slider :max="100" v-model="price.left" :step="0.1"></el-slider>
                     </div>
                     <div class="block">
                       <span class="demonstration">Line Height:</span>
@@ -354,7 +367,7 @@
                     </div>
                     <div class="block">
                       <span class="demonstration">Letter Spacing:</span>
-                      <el-slider :max="20" v-model="price.letterSpacing" style="width: 115px;"></el-slider>
+                      <el-slider :max="50" v-model="price.letterSpacing" style="width: 115px;"></el-slider>
                     </div>
                   </div>
                   <div class="font-btns">
@@ -382,7 +395,7 @@
                     <el-color-picker
                       v-model="price.color"
                       show-alpha
-                      :predefine="backgroundColor.predefineColors"
+                      :predefine="predefineColors"
                       @change="onColorPickerChange()"
                     ></el-color-picker>
                   </div>
@@ -401,33 +414,31 @@
         <!-- CARD CONTENT WRAPPER BEGIN -->
         <el-main>
           <div class="main-board">
-            <!-- MAIN CARD SETTING BEGIN -->
-            <div></div>
-            <!-- MAIN CARD SETTING BEGIN -->
-
             <!-- MAIN CARD CONTENT BEGIN -->
             <div
               id="main-content"
+              @click="switchTab('bgcolortab')"
               v-bind:style="{
                 backgroundImage:'url('+backgroundImage.value+')', backgroundColor: backgroundColor.BgColor,
                 width: backgroundColor.width+'px',
                 height: backgroundColor.height+'px',
               }"
-              class="display-center"
             >
               <!-- CARD LOGO ITEM BEGIN -->
               <div
                 class="card-item"
+                @click="switchTab('logoimgtab')"
                 id="logo"
-                v-bind:style="{top: logo.top+'px', left: logo.left+'px', width: logo.width+'%'}"
+                v-bind:style="{top: logo.top+'%', left: logo.left+'%', width: logo.width+'%'}"
               >
                 <img :src="logo.url" alt />
               </div>
               <!-- CARD lOGO ITEM END -->
 
               <!-- CARD TEXT ITEM BEGIN -->
-              <div
+              <pre
                 class="card-item"
+                @click="switchTab('texttab')"
                 id="text"
                 v-bind:style="{
                   fontFamily: text.fontFamily,
@@ -437,30 +448,31 @@
                   lineHeight: text.lineHeight,
                   letterSpacing: text.letterSpacing+'px',
                   fontSize: text.fontSize+'px',
-                  top: text.top+'px',
-                  left: text.left+'px',
+                  top: text.top+'%',
+                  left: text.left+'%',
                   color: text.color,
                 }"
-              >{{text.value}}</div>
+              >{{text.value}}</pre>
               <!-- CARD TEXT ITEM END -->
 
               <!-- CARD PRICE ITEM BEGIN -->
-              <div
+              <pre
                 class="card-item"
+                @click="switchTab('pricetab')"
                 id="price"
                 v-bind:style="{
                   fontFamily: price.fontFamily,
                   fontWeight: (price.bold ? 'bold':'unset'),
                   fontStyle: (price.italic ? 'italic':'unset'),
-                  priceDecoration: (price.underline ? 'underline':'unset'),
+                  textDecoration: (price.underline ? 'underline':'unset'),
                   lineHeight: price.lineHeight,
                   letterSpacing: price.letterSpacing+'px',
                   fontSize: price.fontSize+'px',
-                  top: price.top+'px',
-                  left: price.left+'px',
+                  top: price.top+'%',
+                  left: price.left+'%',
                   color: price.color,
                 }"
-              >{{price.value}}</div>
+              >{{price.value}}</pre>
               <!-- CARD PRICE ITEM END -->
             </div>
           </div>
@@ -471,6 +483,8 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+
 export default {
   name: "GiftCardCreator",
   components: {},
@@ -478,91 +492,96 @@ export default {
   filters: {},
   data() {
     return {
+      isEditor: false, // INDECATE WHETHER IT's EDIT OR CREATE STATUS
+      logosLoading: true,
       tabPosition: "left",
+      tabActive: "logoimgtab",
       loading: false,
       logoDialogImageUrl: "", // LOGO IMAGE PREVIEW IN MODAL
       logoDialogVisible: false, // INDECATE IMAGE SHOW OR HIDE ON LOGO PREVIEW MODAL
       BgDialogImageUrl: "", // BACKGROUND IMAGE PREVIEW IN MODAL
       BgDialogVisible: false, // INDECATE IMAGE SHOW OR HIDE ON BACKGROUND PREVIEW MODAL
+      fontFamilies: [
+        {
+          value: "auto",
+          label: "auto"
+        },
+        {
+          value: "cursive",
+          label: "cursive"
+        },
+        {
+          value: "fantasy",
+          label: "fantasy"
+        },
+        {
+          value: "monospace",
+          label: "monospace"
+        },
+        {
+          value: "sans-serif",
+          label: "sans-serif"
+        }
+      ],
+      fontSizes: [
+        6,
+        8,
+        10,
+        12,
+        14,
+        16,
+        18,
+        20,
+        24,
+        30,
+        36,
+        48,
+        60,
+        72,
+        96,
+        120,
+        144,
+        192,
+        240
+      ],
+      predefineColors: [
+        // PREDEFINED COLORS FOR COLOR PICKER
+        "#ff4500",
+        "#ff8c00",
+        "#ffd700",
+        "#90ee90",
+        "#00ced1",
+        "#1e90ff",
+        "#c71585",
+        "rgba(255, 69, 0, 0.68)",
+        "rgb(255, 120, 0)",
+        "hsl(181, 100%, 37%)"
+      ],
       logo: {
-        top: 30,
-        left: 40,
+        id: 0,
+        top: 5,
+        left: 5,
         width: 10,
         enable: true,
         url: "" // URL OF CARD LOGO
       }, // SETTINGS OF LOGO
       backgroundImage: {
+        id: 0,
         value: null, // CURRENT BACKGROUND IMAGE VALUE OF CARD
         enable: true // INDECATE ENABLE OR DISABLE OF BACKGROUND IMAGE SETTING
       },
       backgroundColor: {
         width: 1000,
-        height: 800,
+        height: 500,
         BgColor: "rgba(30, 144, 255, 1)", // CURRENT BACKGROUND COLOR VALUE OF CARD
-        enable: true, // INDECATE ENABLE OR DISABLE OF BACKGROUND COLOR SETTING
-        predefineColors: [
-          // PREDEFINED COLORS FOR COLOR PICKER
-          "#ff4500",
-          "#ff8c00",
-          "#ffd700",
-          "#90ee90",
-          "#00ced1",
-          "#1e90ff",
-          "#c71585",
-          "rgba(255, 69, 0, 0.68)",
-          "rgb(255, 120, 0)",
-          "hsl(181, 100%, 37%)"
-        ]
+        enable: true // INDECATE ENABLE OR DISABLE OF BACKGROUND COLOR SETTING
       },
       text: {
         // SETTINGS FOR TEXT OF CARD
-        fontFamilies: [
-          {
-            value: "auto",
-            label: "auto"
-          },
-          {
-            value: "cursive",
-            label: "cursive"
-          },
-          {
-            value: "fantasy",
-            label: "fantasy"
-          },
-          {
-            value: "monospace",
-            label: "monospace"
-          },
-          {
-            value: "sans-serif",
-            label: "sans-serif"
-          }
-        ],
         fontFamily: "cursive",
-        fontSizes: [
-          6,
-          8,
-          10,
-          12,
-          14,
-          16,
-          18,
-          20,
-          24,
-          30,
-          36,
-          48,
-          60,
-          72,
-          96,
-          120,
-          144,
-          192,
-          240
-        ],
         fontSize: 72,
-        top: 170,
-        left: 200,
+        top: 10,
+        left: 27,
         lineHeight: 1,
         letterSpacing: 0,
         bold: false,
@@ -573,53 +592,10 @@ export default {
       },
       price: {
         // SETTINGS FOR PRICE OF CARD
-        fontFamilies: [
-          {
-            value: "auto",
-            label: "auto"
-          },
-          {
-            value: "cursive",
-            label: "cursive"
-          },
-          {
-            value: "fantasy",
-            label: "fantasy"
-          },
-          {
-            value: "monospace",
-            label: "monospace"
-          },
-          {
-            value: "sans-serif",
-            label: "sans-serif"
-          }
-        ],
         fontFamily: "fantasy",
-        fontSizes: [
-          6,
-          8,
-          10,
-          12,
-          14,
-          16,
-          18,
-          20,
-          24,
-          30,
-          36,
-          48,
-          60,
-          72,
-          96,
-          120,
-          144,
-          192,
-          240
-        ],
         fontSize: 96,
-        top: 260,
-        left: 300,
+        top: 10,
+        left: 40,
         lineHeight: 1,
         letterSpacing: 0,
         bold: false,
@@ -630,55 +606,253 @@ export default {
       }
     };
   },
-  created() {},
+  computed: {
+    ...mapGetters(["giftLogos", "giftBgImgs", "activeGiftCard"])
+  },
+  created() {
+    this.getLogos();
+    this.getBgImgs();
+    this.applyActiveCard();
+  },
+  mounted() {},
   methods: {
-    // LOGO ACTIONS BEGIN
-    handleLogoRemove(file, fileList) {
-      console.log(file, fileList);
+    // GLOBAL ACTIONS BEGIN
+    switchTab(tabName) {
+      var mainContent = document.getElementById("main-content");
+      if (tabName == "bgcolortab") {
+        if (event.target != mainContent) {
+          return;
+        } else if (this.backgroundImage.value != null) {
+          this.tabActive = "bgimgtab";
+          return;
+        }
+      }
+      this.tabActive = tabName;
     },
-    handleLogoPreview(file) {
-      this.logoDialogImageUrl = file.url;
-      this.logoDialogVisible = true;
-    },
-    applyLogo(file) {
-      var toolBtnDels = document.getElementsByClassName("el-icon-delete");
-      var toolBtnZooms = document.getElementsByClassName("el-icon-zoom-in");
-      if (event.target == toolBtnDels[0] || event.target == toolBtnZooms[0]) {
+    // HANDLE GIFT CARD BEGIN
+    applyActiveCard() {
+      console.log("activeGiftCard", this.activeGiftCard);
+      console.log(this.$route);
+      if (this.$route.name != "GiftsEditor") {
+        return;
+      } else if (this.activeGiftCard == null) {
+        this.$router.push({
+          path: this.redirect || "/gift-card"
+        });
         return;
       }
+      this.isEditor = true;
+      this.backgroundImage = JSON.parse(this.activeGiftCard.backgroundImage);
+      this.backgroundColor = JSON.parse(this.activeGiftCard.backgroundColor);
+      this.logo = JSON.parse(this.activeGiftCard.logo);
+      this.text = JSON.parse(this.activeGiftCard.text);
+      this.price = JSON.parse(this.activeGiftCard.price);
+    },
+    updateGiftCard() {
+      // console.log("getCardById");
+      // await this.$store.dispatch("giftCard/getOne")
+    },
+    saveGiftCard() {
+      var card = {
+        id: this.activeGiftCard ? this.activeGiftCard.id : "",
+        logo: JSON.stringify(this.logo),
+        backgroundImage: JSON.stringify(this.backgroundImage),
+        backgroundColor: JSON.stringify(this.backgroundColor),
+        text: JSON.stringify(this.text),
+        price: JSON.stringify(this.price)
+      };
+      this.$store
+        .dispatch("giftCard/store", card)
+        .then(() => {
+          this.$message({
+            message:
+              "Gift Card " +
+              (this.isEditor ? "updated" : "saved") +
+              " successfully",
+            type: "success"
+          });
+        })
+        .catch(e => {});
+    },
+    downloadGiftCard() {
+      console.log("saving . . .");
+      if (this.logo.url != null || this.backgroundImage.value != null) return;
+      var cardContainer = document.getElementById("main-content");
+      var that = this;
+      html2canvas(cardContainer, { allowTaint: true }).then(function(canvas) {
+        console.log(canvas);
+        var myImage = canvas.toDataURL("image/jpg");
+        that.downloadURI("data:" + myImage, "Gift Card.jpg");
+      });
+    },
+    downloadURI(uri, name) {
+      var link = document.createElement("a");
+      link.download = name;
+      link.href = uri;
+      link.click();
+    },
+    // HANDLE GIFT CARD END
+    // GLOBAL ACTIONS END
+
+    // LOGO ACTIONS BEGIN
+    // upload logo
+    handleLogoChange(file, fileList) {
+      var logo = {
+        name: file.name,
+        type: file.raw.type.split("/")[1],
+        uid: file.uid
+      };
+      var that = this;
+      var reader = new FileReader();
+      reader.readAsDataURL(file.raw);
+      reader.onloadend = function() {
+        var base64data = reader.result;
+        logo.content = base64data;
+
+        that.$store
+          .dispatch("giftLogo/store", logo)
+          .then(() => {
+            that.$message({
+              message: "Logo uploaded successfully",
+              type: "success"
+            });
+          })
+          .catch(e => {});
+      };
+    },
+    // get logos
+    async getLogos() {
+      await this.$store.dispatch("giftLogo/get");
+      setTimeout(() => {
+        this.logosLoading = false;
+      }, 1.5 * 1000);
+    },
+    // remove logo
+    handleLogoRemove(file) {
       console.log(file);
+      var that = this;
+      var selectedLogo = false;
+      if (this.logo.id == file.id) {
+        selectedLogo = true;
+      }
+      this.$confirm(
+        selectedLogo
+          ? "This logo is used currently. Continue? "
+          : "This will permanently delete the logo. Continue?",
+        "Warning",
+        {
+          confirmButtonText: "Yes",
+          cancelButtonText: "Cancel",
+          type: "warning",
+          customClass: "confirmRemoveBox"
+        }
+      )
+        .then(() => {
+          if (selectedLogo) that.logo.url = null;
+          that.$store
+            .dispatch("giftLogo/remove", { id: file.id })
+            .then(() => {})
+            .catch(err => {
+              // that.$message({ type: "warning", message: err });
+            });
+        })
+        .catch(() => {});
+    },
+    // apply clicked logo
+    applyLogo(file) {
+      var classnames = ["el-icon-delete", "el-upload-list__item-delete"];
+      if (classnames.indexOf(event.target.className) != -1) {
+        // when click remove btn
+        return;
+      }
       this.logo.enable = true;
       this.logo.url = file.url;
+      this.logo.id = file.id;
     },
+    // enable/disable logo
     onLogoSwitchChange() {
       if (!this.logo.enable) {
         this.logo.url = null;
+        this.logo.id = 0;
       }
     },
     // LOGO ACTIONS END
 
     // BACKGROUND IMAGE ACTIONS BEGIN
+    // upload bgimg
+    handleBgImgChange(file) {
+      var bgImg = {
+        name: file.name,
+        type: file.raw.type.split("/")[1],
+        uid: file.uid
+      };
+      var that = this;
+      var reader = new FileReader();
+      reader.readAsDataURL(file.raw);
+      reader.onloadend = function() {
+        var base64data = reader.result;
+        bgImg.content = base64data;
+
+        that.$store
+          .dispatch("giftBgImg/store", bgImg)
+          .then(() => {
+            that.$message({
+              message: "BackGround Image uploaded successfully",
+              type: "success"
+            });
+          })
+          .catch(e => {});
+      };
+    },
+    // get bgimgs
+    async getBgImgs() {
+      await this.$store.dispatch("giftBgImg/get");
+    },
     handleBgRemove(file) {
       console.log(file);
-    },
-    handleBgCardPreview(file) {
-      this.BgDialogImageUrl = file.url;
-      this.BgDialogVisible = true;
+      var that = this;
+      var selectedBgImg = false;
+      if (this.logo.id == file.id) {
+        selectedBgImg = true;
+      }
+      this.$confirm(
+        selectedBgImg
+          ? "This image is used currently. Continue?"
+          : "This will permanently delete the image. Continue?",
+        "Warning",
+        {
+          confirmButtonText: "Yes",
+          cancelButtonText: "Cancel",
+          type: "warning",
+          customClass: "confirmRemoveBox"
+        }
+      )
+        .then(() => {
+          if (selectedBgImg) that.backgroundImage.value = null;
+          that.$store
+            .dispatch("giftBgImg/remove", { id: file.id })
+            .then(() => {})
+            .catch(err => {
+              // that.$message({ type: "warning", message: err });
+            });
+        })
+        .catch(() => {});
     },
     applyBgImage(file) {
-      console.log(file);
-      var toolBtnDels = document.getElementsByClassName("el-icon-delete");
-      var toolBtnZooms = document.getElementsByClassName("el-icon-zoom-in");
-      if (event.target == toolBtnDels[0] || event.target == toolBtnZooms[0]) {
+      var classnames = ["el-icon-delete", "el-upload-list__item-delete"];
+      if (classnames.indexOf(event.target.className) != -1) {
+        // when click remove btn
         return;
       }
       this.backgroundImage.enable = true;
       this.backgroundImage.value = file.url;
+      this.backgroundImage.id = file.id;
     },
     onBgImageSwitchChange() {
       console.log(this.backgroundImage.enable);
       if (!this.backgroundImage.enable) {
         this.backgroundImage.value = null;
+        this.backgroundImage.id = 0;
       }
     },
     // BACKGROUND IMAGE ACTIONS END
@@ -727,7 +901,7 @@ export default {
 };
 </script>
 <style lang="scss">
-.giftcreator-wrapper {
+.creator-wrapper {
   background-color: black;
   height: 100%;
 
@@ -800,6 +974,15 @@ export default {
     .el-upload-list__item-actions {
       cursor: alias;
     }
+    .el-upload-list__item-delete {
+      position: absolute !important;
+      left: 6px !important;
+      width: fit-content;
+      // right: 0 !important;
+    }
+    li.el-upload-list__item.is-ready {
+      display: none;
+    }
     .tab-content-header {
       height: 48px;
       margin-bottom: 17px;
@@ -823,8 +1006,9 @@ export default {
         position: relative;
         top: 2px;
         color: snow;
-        font-weight: bold;
-        letter-spacing: 1px;
+        font-size: 14px;
+        // font-weight: bold;
+        // letter-spacing: 1px;
       }
     }
     .textSetting > div {
@@ -868,6 +1052,7 @@ export default {
       display: flex;
       flex-wrap: wrap;
       justify-content: space-around;
+      align-items: center;
 
       .font-btn {
         width: 32px;
@@ -883,9 +1068,16 @@ export default {
         color: white;
       }
     }
+    textarea {
+      font-size: 20px !important;
+    }
     .main-board {
       height: 100%;
       width: 100%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
       #main-content {
         background-size: cover;
@@ -893,9 +1085,18 @@ export default {
         width: 800px;
         height: 500px;
         overflow: hidden;
+        user-select: none;
+        cursor: pointer;
+        margin-left: -1px;
 
         .card-item {
-          position: absolute;
+          width: fit-content;
+          position: relative;
+          border: 1px solid transparent;
+          cursor: pointer;
+        }
+        .card-item:hover {
+          border-color: green;
         }
         #logo {
           top: 100px;

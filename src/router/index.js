@@ -119,9 +119,9 @@ export const constantRoutes = [
     ]
   },
   {
-    path: "/gift",
+    path: "/gift-card",
     component: Layout,
-    redirect: "/gift/index",
+    redirect: "/gift-card/index",
     children: [
       {
         path: "index",
@@ -137,13 +137,21 @@ export const constantRoutes = [
     ]
   },
   {
-    path: "/giftcreator",
+    path: "/gift-card/creator",
     component: () => import("@/views/giftcardcreator/index"),
     name: "GiftsCreator",
     hidden: true,
     meta: {
-      title: "Gift Card Generator",
-      icon: "gift",
+      roles: ["admin"],
+      noCache: true
+    }
+  },
+  {
+    path: "/gift-card/editor",
+    component: () => import("@/views/giftcardcreator/index"),
+    name: "GiftsEditor",
+    hidden: true,
+    meta: {
       roles: ["admin"],
       noCache: true
     }
