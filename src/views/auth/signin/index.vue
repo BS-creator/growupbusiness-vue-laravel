@@ -3,18 +3,20 @@
     <el-form
       ref="loginForm"
       :model="loginForm"
-      :rules="loginRules"
+      :rules="usingEmail ? loginRulesWithEmail : loginRulesWithPhone"
       class="login-form"
       autocomplete="on"
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">SignIn Form</h3>
+        <h3 class="title">Sign In</h3>
       </div>
 
-      <el-form-item prop="email">
+      <a class="alternative" @click="usingEmail=!usingEmail">Or use phone number alternative</a>
+
+      <el-form-item prop="email" v-if="usingEmail">
         <span class="svg-container">
-          <svg-icon icon-class="user" />
+          <svg-icon icon-class="email" />
         </span>
         <el-input
           ref="email"
@@ -26,7 +28,20 @@
           autocomplete="on"
         />
       </el-form-item>
-
+      <el-form-item prop="phone" v-else>
+        <span class="svg-container">
+          <svg-icon icon-class="call" />
+        </span>
+        <el-input
+          ref="phone"
+          v-model="loginForm.phone"
+          placeholder="Phone Number"
+          name="phone"
+          type="text"
+          tabindex="1"
+          autocomplete="on"
+        />
+      </el-form-item>
       <el-tooltip v-model="capsTooltip" content="Caps lock is On" placement="right" manual>
         <el-form-item prop="password">
           <span class="svg-container">
@@ -58,12 +73,7 @@
         size="large"
         style="width:100%;margin-bottom:30px;"
         @click.native.prevent="handleLogin"
-      >
-        <div>
-          <i class="fa fa-sign-in"></i>
-          <span>Sign In</span>
-        </div>
-      </el-button>
+      >Sign In</el-button>
 
       <div style="position:relative">
         <div class="tips">
@@ -140,6 +150,13 @@ export default {
         callback();
       }
     };
+    const validatePhoneNumber = (rule, value, callback) => {
+      if (value.length < 1) {
+        callback(new Error("Please enter the valid Phone Number"));
+      } else {
+        callback();
+      }
+    };
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
         callback(new Error("The password can not be less than 6 digits"));
@@ -149,10 +166,11 @@ export default {
     };
     return {
       loginForm: {
-        email: "admin@admin.com",
-        password: "111111"
+        phone: "",
+        email: "",
+        password: ""
       },
-      loginRules: {
+      loginRulesWithEmail: {
         email: [
           { required: true, trigger: "blur", validator: validateUserEmail }
         ],
@@ -160,6 +178,15 @@ export default {
           { required: true, trigger: "blur", validator: validatePassword }
         ]
       },
+      loginRulesWithPhone: {
+        phone: [
+          { required: true, trigger: "blur", validator: validatePhoneNumber }
+        ],
+        password: [
+          { required: true, trigger: "blur", validator: validatePassword }
+        ]
+      },
+      usingEmail: true,
       passwordType: "password",
       capsTooltip: false,
       loading: false,
@@ -180,9 +207,6 @@ export default {
       immediate: true
     }
   },
-  created() {
-    // console.log(this.$ServerURL);
-  },
   mounted() {
     if (this.loginForm.email === "") {
       this.$refs.email.focus();
@@ -190,20 +214,7 @@ export default {
       this.$refs.password.focus();
     }
   },
-  destroyed() {
-    // window.removeEventListener('storage', this.afterQRScan)
-  },
   methods: {
-    testApi() {
-      this.$http
-        .post(this.$ServerURL + "test/")
-        .then(response => {
-          console.log(response.data);
-        })
-        .catch(err => {
-          console.log({ err: err });
-        });
-    },
     checkCapslock(e) {
       const { key } = e;
       this.capsTooltip = key && key.length === 1 && key >= "A" && key <= "Z";
@@ -223,7 +234,10 @@ export default {
         if (valid) {
           this.loading = true;
           this.$store
-            .dispatch("user/login", this.loginForm)
+            .dispatch("user/login", {
+              ...this.loginForm,
+              usingEmail: this.usingEmail
+            })
             .then(() => {
               this.$router.push({
                 path: this.redirect || "/",
@@ -293,10 +307,20 @@ $cursor: #fff;
 
 /* reset element-ui css */
 .login-container {
-  .el-icon-loading {
+  // .el-icon-loading {
+  //   position: relative;
+  //   top: 8px;
+  //   font-size: 27px;
+  // }
+  .alternative {
+    color: #909399;
     position: relative;
-    top: 8px;
-    font-size: 27px;
+    top: -5px;
+    font-size: 13px;
+    left: 2px;
+  }
+  .alternative:hover {
+    text-decoration: underline;
   }
   .social-media-btn {
     // width: 100%;

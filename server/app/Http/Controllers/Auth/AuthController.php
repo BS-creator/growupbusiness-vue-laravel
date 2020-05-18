@@ -23,12 +23,22 @@ class AuthController extends Controller
 
     // Sign In
     public function signin(Request $request) {
-        $validatedData = $request->validate([
-            'email' => 'required',
-            'password' => 'required',
-        ]);
-        $user = User::where('email', $validatedData['email'])->first();
-        // return response()->json(array('a'=>$user['password'], 'b'=>Hash::make($validatedData['password'])));
+        $usingEmail = $request->input('usingEmail');
+        $validatedData = NULL;
+        $user = NULL;
+        if($usingEmail) {
+            $validatedData = $request->validate([
+                'email' => 'required',
+                'password' => 'required',
+            ]);
+            $user = User::where('email', $validatedData['email'])->first();
+        } else {
+            $validatedData = $request->validate([
+                'phone' => 'required',
+                'password' => 'required',
+            ]);
+            $user = User::where('phone', $validatedData['phone'])->first();
+        }
         if($user) {
             if(!Hash::check($validatedData['password'], $user['password'])){
                 return response()->json(array('code'=>4001, 'message'=>'Incorrect password'));
@@ -38,7 +48,10 @@ class AuthController extends Controller
         }
         $user['api_token'] = Str::random(60);
         $user['code'] = 20000;
-        User::where('id', $user['id'])->update(['api_token' => $user['api_token']]);
+        User::where('id', $user['id'])->update([
+            'api_token' => $user['api_token'],
+            'auth_type'=>$usingEmail?"phone":"email"
+        ]);
         return response()->json($user);
 
     }
@@ -90,18 +103,23 @@ class AuthController extends Controller
     }
     // Sign Up
     public function signup(Request $request) {
-        $validatedData = $request->validate([
-            'name' => 'required',
-            'avatar' => 'max:254',
+        $saveData = $request->input();
+
+        $validator = Validator::make($saveData, [
             'email' => 'required|unique:users|max:190',
+            'phone' => 'required|unique:users',
             'password' => 'required',
         ]);
+        if ($validator->fails()) {
+            $msg = $validator->errors()->first();
+            return response()->json(['message' => $msg, 'type'=>gettype($msg)], 200);
+        }
+        $saveData['password'] = Hash::make($saveData['password']);
+        $saveData['api_token'] = Str::random(60);
 
-        $validatedData['password'] = Hash::make($validatedData['password']);
-        $validatedData['api_token'] = Str::random(60);
-        User::create($validatedData);
-        $validatedData["code"] = 20000;
-        return response()->json($validatedData);
+        User::create($saveData);
+        $saveData["code"] = 20000;
+        return response()->json($saveData);
     }
 
     public function logout(Request $request)

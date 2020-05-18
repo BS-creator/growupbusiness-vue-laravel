@@ -14,7 +14,7 @@ class AddNameRoleAvatarFieldsToUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('name', 190)->after('api_token');
+            $table->string('name', 190)->after('api_token')->nullable();
             $table->string('avatar')->after('api_token')->nullable();
             $table->string('role')->after('api_token')->default('admin')->nullable();
         });

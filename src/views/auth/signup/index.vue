@@ -9,9 +9,9 @@
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">SignUp Form</h3>
+        <h3 class="title">Sign Up</h3>
       </div>
-
+      <!--
       <el-form-item prop="username">
         <span class="svg-container">
           <svg-icon icon-class="user" />
@@ -25,17 +25,32 @@
           tabindex="1"
           autocomplete="on"
         />
-      </el-form-item>
+      </el-form-item>-->
 
       <el-form-item prop="email">
         <span class="svg-container">
-          <svg-icon icon-class="user" />
+          <svg-icon icon-class="email" />
         </span>
         <el-input
           ref="email"
           v-model="signupForm.email"
-          placeholder="Phone Number or Email"
+          placeholder="Email"
           name="email"
+          type="text"
+          tabindex="1"
+          autocomplete="on"
+        />
+      </el-form-item>
+
+      <el-form-item prop="phone">
+        <span class="svg-container">
+          <svg-icon icon-class="call" />
+        </span>
+        <el-input
+          ref="phone"
+          v-model="signupForm.phone"
+          placeholder="Phone Number"
+          name="phone"
           type="text"
           tabindex="1"
           autocomplete="on"
@@ -73,12 +88,7 @@
         size="large"
         style="width:100%;margin-bottom:30px;"
         @click.native.prevent="handleSignup"
-      >
-        <div>
-          <i class="fa fa-sign-in"></i>
-          <span>Sign Up</span>
-        </div>
-      </el-button>
+      >Sign Up</el-button>
 
       <div style="position:relative">
         <div class="tips">
@@ -142,17 +152,13 @@
 
 <script>
 import { validUsername, validEmail } from "@/utils/validate";
-import SocialSign from "./components/SocialSignin";
 
 export default {
-  name: "Login",
-  components: { SocialSign },
+  name: "Signup",
   data() {
-    const validatePhoneAndEmail = (rule, value, callback) => {
+    const validateEmail = (rule, value, callback) => {
       if (!validEmail(value)) {
         callback(new Error("Please enter the valid Email"));
-      } else if (false) {
-        callback(new Error("Please enter the valid Phone number"));
       } else {
         callback();
       }
@@ -173,19 +179,21 @@ export default {
         callback();
       }
     };
+    const validatePhoneNumber = (rule, value, callback) => {
+      callback();
+    };
     return {
       signupForm: {
-        username: "admin A",
+        // username: "admin A",
         email: "admin@admin.com",
+        phone: "111-1111-1111",
         password: "111111"
       },
       signupRules: {
-        username: [
-          { required: true, trigger: "blur", validator: validateUsername }
+        phone: [
+          { required: true, trigger: "blur", validator: validatePhoneNumber }
         ],
-        email: [
-          { required: true, trigger: "blur", validator: validatePhoneAndEmail }
-        ],
+        email: [{ required: true, trigger: "blur", validator: validateEmail }],
         password: [
           { required: true, trigger: "blur", validator: validatePassword }
         ]
@@ -226,16 +234,6 @@ export default {
     // window.removeEventListener('storage', this.afterQRScan)
   },
   methods: {
-    testApi() {
-      this.$http
-        .get(this.$ServerURL + "test/")
-        .then(response => {
-          console.log(response.data);
-        })
-        .catch(err => {
-          console.log({ err: err });
-        });
-    },
     checkCapslock(e) {
       const { key } = e;
       this.capsTooltip = key && key.length === 1 && key >= "A" && key <= "Z";
@@ -327,11 +325,11 @@ $cursor: #fff;
 
 /* reset element-ui css */
 .login-container {
-  .el-icon-loading {
-    position: relative;
-    top: 8px;
-    font-size: 27px;
-  }
+  // .el-icon-loading {
+  //   position: relative;
+  //   top: 8px;
+  //   font-size: 27px;
+  // }
   .social-media-btn {
     // width: 100%;
     margin-bottom: 30px;

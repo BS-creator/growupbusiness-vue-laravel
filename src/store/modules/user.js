@@ -38,9 +38,9 @@ const mutations = {
 const actions = {
   // user login
   login({ commit }, userInfo) {
-    const { email, password } = userInfo;
+    const { email, phone, password, usingEmail } = userInfo;
     return new Promise((resolve, reject) => {
-      login({ email: email, password: password })
+      login({ email, phone, password, usingEmail })
         .then(response => {
           const data = response;
           commit("SET_TOKEN", data.api_token);
@@ -71,9 +71,9 @@ const actions = {
 
   // user signup
   signup({ commit }, userInfo) {
-    const { email, password, username } = userInfo;
+    const { email, password, phone } = userInfo;
     return new Promise((resolve, reject) => {
-      signup({ name: username, email: email, password: password })
+      signup({ phone: phone, email: email, password: password })
         .then(response => {
           console.log("store sign", response);
           commit("SET_TOKEN", response.api_token);
