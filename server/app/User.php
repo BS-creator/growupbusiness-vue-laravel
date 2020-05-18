@@ -16,7 +16,7 @@ class User extends Authenticatable
      * @var array
      */
     protected $fillable = [
-        'name', 'email', 'password',
+        'phone', 'avatar', 'email', 'password', 'api_token', 'auth_type',
     ];
 
     /**
@@ -36,4 +36,16 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function giftlogos() {
+        return $this->hasMany('App\Giftlogo');
+    }
+
+    public function giftBgImgs() {
+        return $this->hasMany('App\Giftbgimg');
+    }
+
+    public function giftCards() {
+        return $this->hasMany('App\Giftcard');
+    }
 }
