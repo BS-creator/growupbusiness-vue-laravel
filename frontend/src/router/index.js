@@ -85,12 +85,13 @@ export const constantRoutes = [
   {
     path: "/",
     component: Layout,
-    redirect: "/dashboard",
+    redirect: "/gift-card",
     children: [
       {
         path: "dashboard",
         component: () => import("@/views/dashboard/index"),
         name: "Dashboard",
+        hidden: true,
         meta: {
           title: "Dashboard",
           icon: "dashboard",
@@ -107,7 +108,7 @@ export const constantRoutes = [
     children: [
       {
         path: "index",
-        component: () => import("@/views/instruction/index"),
+        component: () => import("@/views/blank/index"),
         name: "Instructions",
         meta: {
           title: "Instruction",
@@ -163,7 +164,7 @@ export const constantRoutes = [
     children: [
       {
         path: "index",
-        component: () => import("@/views/auth/signin/index"),
+        component: () => import("@/views/blank/index"),
         name: "Projects",
         meta: {
           title: "Projects",
@@ -181,7 +182,7 @@ export const constantRoutes = [
     children: [
       {
         path: "index",
-        component: () => import("@/views/auth/signin/index"),
+        component: () => import("@/views/blank/index"),
         name: "Followed Users",
         meta: {
           title: "Followed Users",
@@ -199,7 +200,7 @@ export const constantRoutes = [
     children: [
       {
         path: "index",
-        component: () => import("@/views/auth/signin/index"),
+        component: () => import("@/views/blank/index"),
         name: "Myinvoices",
         meta: {
           title: "My Invoices",
@@ -218,7 +219,7 @@ export const constantRoutes = [
     children: [
       {
         path: "index",
-        component: () => import("@/views/profile/index"),
+        component: () => import("@/views/blank/index"),
         name: "Profile",
         meta: {
           title: "Profile",
@@ -228,20 +229,20 @@ export const constantRoutes = [
         }
       }
     ]
-  },
-  {
-    path: "/guide",
-    component: Layout,
-    redirect: "/guide/index",
-    children: [
-      {
-        path: "index",
-        component: () => import("@/views/guide/index"),
-        name: "Guide",
-        meta: { title: "Guide", icon: "guide", roles: ["admin"], noCache: true }
-      }
-    ]
   }
+  // {
+  //   path: "/guide",
+  //   component: Layout,
+  //   redirect: "/guide/index",
+  //   children: [
+  //     {
+  //       path: "index",
+  //       component: () => import("@/views/guide/index"),
+  //       name: "Guide",
+  //       meta: { title: "Guide", icon: "guide", roles: ["admin"], noCache: true }
+  //     }
+  //   ]
+  // }
 ];
 
 const createRouter = () =>

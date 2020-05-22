@@ -21,7 +21,7 @@
         <el-input
           ref="email"
           v-model="loginForm.email"
-          placeholder="Username"
+          placeholder="Email"
           name="email"
           type="text"
           tabindex="1"
